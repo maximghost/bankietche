@@ -13,3 +13,9 @@ export const LEGAL_IDENTITY = {
   licenceServerRegion: 'Union européenne (Francfort)',
   store: 'Ghost.Store (boutique Chariow)',
 };
+
+/** Version des textes : à changer quand les CGU évoluent (les utilisateurs devront les réaccepter). */
+export const LEGAL_VERSION = '2026-11-06';
+export const LEGAL_UPDATED = '6 novembre 2026';
+
+export const isFilled = (v: string) => !v.startsWith('[À COMPLÉTER');
