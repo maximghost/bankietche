@@ -1,11 +1,14 @@
 /** Configuration lue au moment du build (fichier .env.local ou secrets GitHub). */
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '');
 /** Clé publique Supabase : publishable (sb_publishable_…) ou ancienne clé anon (eyJ…). */
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 export const CHARIOW_URL = import.meta.env.VITE_CHARIOW_URL ?? '';
+
+/** Clé publique VAPID des notifications (publique par conception). */
+export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '';
 
 export const SUPPORT_LABEL = 'Ghost.Technologies';
 

@@ -1,5 +1,5 @@
 import {
-  CalendarRange, Download, Eye, FileSpreadsheet, FileText, Info, KeyRound, Landmark, LayoutGrid, MessageCircle,
+  Bell, BellRing, CalendarRange, Download, Eye, FileSpreadsheet, FileText, Info, KeyRound, Landmark, LayoutGrid, MessageCircle,
   Palette, Scale, ShieldCheck, Smartphone, Trash2, Upload, UserRound, Wallet, Plus,
 } from 'lucide-preact';
 import { useRef, useState } from 'preact/hooks';
@@ -13,6 +13,7 @@ import type { Category, Theme } from '../../domain/types';
 import { isFilled, LEGAL_IDENTITY } from '../../legal/identity';
 import { LegalNoticeText, PrivacyText, TermsText } from '../../legal/texts';
 import { isIOS, isStandalone, useInstallPrompt } from '../../pwa';
+import { disablePush, enablePush, permission, pushSupport, showExampleNotification } from '../../services/push';
 import type { LicenceState } from '../../services/licence';
 import { useStore } from '../../state/store';
 import { closeLayer, Field, ListGroup, ListRow, Page, Segmented, Switch } from '../components';
@@ -22,7 +23,7 @@ import { PeriodPicker } from '../PeriodPicker';
 import { useUI } from '../ui-context';
 
 type Sub =
-  | 'profile' | 'period' | 'budgets' | 'categories' | 'appearance' | 'backup' | 'install' | 'licence'
+  | 'notifications' | 'profile' | 'period' | 'budgets' | 'categories' | 'appearance' | 'backup' | 'install' | 'licence'
   | 'about' | 'terms' | 'privacy' | 'notice' | 'wipe';
 
 export function SettingsPage(props: { licence: LicenceState; onClose: () => void }) {
@@ -54,6 +55,11 @@ export function SettingsPage(props: { licence: LicenceState; onClose: () => void
         <ListRow icon={<LayoutGrid size={18} />} label="Catégories" value={String(data.categories.filter((c) => !c.archived && !c.system).length)} onClick={() => setSub('categories')} />
       </ListGroup>
 
+      <ListGroup title="Rappels">
+        <ListRow icon={<Bell size={18} />} label="Rappel quotidien"
+          value={settings.notifications.enabled ? `à ${settings.notifications.hour} h` : 'Désactivé'} onClick={() => setSub('notifications')} />
+      </ListGroup>
+
       <ListGroup title="Affichage">
         <ListRow icon={<Palette size={18} />} label="Apparence" value={themeLabel} onClick={() => setSub('appearance')} />
         <div>
@@ -82,6 +88,7 @@ export function SettingsPage(props: { licence: LicenceState; onClose: () => void
 
       <p class="about">Bankiétché v{APP_VERSION} · une appli Ghost.Technologies</p>
 
+      {sub === 'notifications' && <NotificationsPage onClose={close} onInstall={() => setSub('install')} />}
       {sub === 'profile' && <ProfilePage onClose={close} />}
       {sub === 'period' && <PeriodPage onClose={close} />}
       {sub === 'budgets' && <BudgetsPage onClose={close} />}
@@ -100,6 +107,97 @@ export function SettingsPage(props: { licence: LicenceState; onClose: () => void
 }
 
 /* ------------------------------------------------------------------ */
+
+const HOURS = Array.from({ length: 24 }, (_, h) => h);
+
+export function NotificationsPage({ onClose, onInstall }: { onClose: () => void; onInstall: () => void }) {
+  const { settings, updateSettings } = useStore();
+  const n = settings.notifications;
+  const support = pushSupport();
+  const [perm, setPerm] = useState(permission());
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const ERR: Record<string, string> = {
+    denied: 'Les notifications sont bloquées pour Bankiétché. Autorise-les dans les réglages de ton téléphone, puis réessaie.',
+    network: 'Pas de connexion. Une connexion est nécessaire pour activer les rappels.',
+    service: 'Le service de notification du téléphone n’a pas répondu. Réessaie dans quelques minutes.',
+    licence: 'Ta licence n’a pas pu être vérifiée. Contacte le support.',
+    invalid: 'L’activation a échoué. Réessaie dans un instant.',
+    config: 'Les rappels ne sont pas encore disponibles sur cette version.',
+    unsupported: 'Ton navigateur ne permet pas les notifications.',
+  };
+
+  const toggle = async (on: boolean) => {
+    setBusy(true);
+    setMsg(null);
+    if (on) {
+      const r = await enablePush(n.hour);
+      setPerm(permission());
+      if (r.ok) {
+        await updateSettings({ notifications: { ...n, enabled: true } });
+        setMsg({ ok: true, text: `C’est activé : tu recevras ton rappel chaque jour vers ${n.hour} h.` });
+      } else setMsg({ ok: false, text: ERR[r.reason] });
+    } else {
+      await disablePush();
+      await updateSettings({ notifications: { ...n, enabled: false } });
+    }
+    setBusy(false);
+  };
+
+  const changeHour = async (hour: number) => {
+    await updateSettings({ notifications: { ...n, hour } });
+    if (n.enabled) {
+      const r = await enablePush(hour);
+      setMsg(r.ok ? { ok: true, text: `Rappel déplacé à ${hour} h.` } : { ok: false, text: ERR[r.reason] });
+    }
+  };
+
+  return (
+    <Page title="Rappel quotidien" onClose={onClose}>
+      <p class="muted">
+        Bankiétché te fait signe une fois par jour : cotisation à venir ou en retard, budget dépassé, dépenses du jour
+        à noter… Le message est rédigé <b>par ton téléphone</b> : le serveur ne connaît ni tes montants, ni tes catégories.
+      </p>
+
+      {support === 'ios-install' && (
+        <div class="banner tone-info">
+          <BellRing size={22} aria-hidden="true" />
+          <span class="grow">Sur iPhone, les rappels nécessitent d’<b>installer Bankiétché sur l’écran d’accueil</b> (iOS 16.4 ou plus récent), puis de l’ouvrir depuis son icône.</span>
+        </div>
+      )}
+      {support === 'ios-install' && <button class="btn btn-primary block" onClick={onInstall}>Comment l’installer</button>}
+      {support === 'unsupported' && <p class="form-error">{ERR.unsupported}</p>}
+      {support === 'config' && <p class="form-error">{ERR.config}</p>}
+      {support === 'ok' && perm === 'denied' && <p class="form-error">{ERR.denied}</p>}
+
+      {support === 'ok' && (
+        <>
+          <div class="list-card">
+            <Switch checked={n.enabled} onChange={(v) => !busy && toggle(v)} label="Activer le rappel quotidien"
+              description={busy ? 'Un instant…' : 'Une notification par jour, même écran verrouillé.'} />
+            <label class="list-row">
+              <span class="list-label">Heure du rappel</span>
+              <select class="inline-select" value={String(n.hour)} onChange={(e) => changeHour(Number(e.currentTarget.value))} aria-label="Heure du rappel">
+                {HOURS.map((h) => <option value={String(h)}>{`${h} h`}</option>)}
+              </select>
+            </label>
+            <Switch checked={n.detailed} onChange={(v) => updateSettings({ notifications: { ...n, detailed: v } })}
+              label="Messages détaillés" description="Affiche les noms et les montants. Attention : visibles sur l’écran verrouillé." />
+          </div>
+          {settings.discreet && n.detailed && <p class="muted small">Le mode discret est actif : les messages restent généraux.</p>}
+          {n.enabled && perm === 'granted' && (
+            <button class="btn btn-soft block" onClick={async () => {
+              const ok = await showExampleNotification();
+              setMsg(ok ? { ok: true, text: 'Voici le message que tu recevrais aujourd’hui.' } : { ok: false, text: ERR.denied });
+            }}>Voir le message du jour</button>
+          )}
+        </>
+      )}
+      {msg && <p class={msg.ok ? 'info-box' : 'form-error'} role="status">{msg.text}</p>}
+    </Page>
+  );
+}
 
 function ProfilePage({ onClose }: { onClose: () => void }) {
   const { settings, updateSettings } = useStore();

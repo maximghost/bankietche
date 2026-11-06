@@ -1,8 +1,9 @@
 import {
   ArrowDownLeft, ArrowUpRight, CircleAlert, Info, PiggyBank, ShieldAlert, Sparkles, TriangleAlert, ChevronRight,
-  Download, Handshake, Target,
+  Download, Handshake, Target, BellRing,
 } from 'lucide-preact';
-import { useMemo } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
+import { pushSupport } from '../../services/push';
 import { BACKUP_REMINDER_DAYS } from '../../config';
 import { expenseChangeVsPrevious, summarizePeriod } from '../../domain/budget';
 import { coachMessage, type Tone } from '../../domain/coach';
@@ -47,6 +48,16 @@ export function HomeScreen() {
 
   const backupDays = lastBackupAt ? (Date.now() - new Date(lastBackupAt).getTime()) / 86_400_000 : Infinity;
   const needBackup = data.transactions.length >= 5 && backupDays > BACKUP_REMINDER_DAYS;
+
+  const [promptHidden, setPromptHidden] = useState(() => {
+    try { return localStorage.getItem('bk:notifPromptHidden') === '1'; } catch { return false; }
+  });
+  const support = pushSupport();
+  const showNotifPrompt = hasAnyData && !settings.notifications.enabled && !promptHidden && (support === 'ok' || support === 'ios-install');
+  const hidePrompt = () => {
+    try { localStorage.setItem('bk:notifPromptHidden', '1'); } catch { /* sans conséquence */ }
+    setPromptHidden(true);
+  };
 
   const heroLabel = s.remainingMode === 'budget' ? 'Reste de ton budget' : 'Ton argent disponible';
   const heroChip = s.remainingMode === 'budget' ? periodPhrase(cfg) : 'solde actuel';
@@ -109,6 +120,19 @@ export function HomeScreen() {
         </div>
         <div class="kpi"><span class="kpi-label">Épargné</span><Money value={s.saving} class="save" /></div>
       </section>
+
+      {showNotifPrompt && (
+        <section class="banner tone-info" aria-labelledby="notif-h">
+          <BellRing size={22} aria-hidden="true" />
+          <div class="grow">
+            <p id="notif-h"><b>Ne rate plus rien.</b> Un rappel par jour pour tes cotisations et ton budget, sans divulguer tes données.</p>
+            <div class="banner-actions">
+              <button class="btn btn-primary" onClick={ui.openNotifications}>Activer</button>
+              <button class="btn btn-ghost" onClick={hidePrompt}>Plus tard</button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {needBackup && (
         <button class="banner tone-warn" onClick={ui.openSettings}>

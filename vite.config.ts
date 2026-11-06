@@ -12,7 +12,14 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['icons/favicon.svg', 'icons/apple-touch-icon.png'],
+      // Service worker écrit à la main (src/sw.ts) pour gérer les notifications.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+      },
+      includeAssets: ['icons/favicon.svg', 'icons/apple-touch-icon.png', 'icons/badge-96.png'],
       manifest: {
         name: 'Bankiétché — Mon banquier',
         short_name: 'Bankiétché',
@@ -29,12 +36,6 @@ export default defineConfig({
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: 'index.html',
-        // Les appels Supabase ne sont jamais mis en cache.
-        navigateFallbackDenylist: [/^\/rest\//],
       },
     }),
   ],

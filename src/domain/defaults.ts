@@ -45,7 +45,10 @@ export function defaultCategories(): Category[] {
 }
 
 export function defaultSettings(): Settings {
-  return { name: '', period: { ...DEFAULT_PERIOD }, theme: 'system', discreet: false, onboarded: false };
+  return {
+    name: '', period: { ...DEFAULT_PERIOD }, theme: 'system', discreet: false, onboarded: false,
+    notifications: { enabled: false, hour: 20, detailed: false },
+  };
 }
 
 /** Conversion des anciens émojis (v1.0) vers les clés d'icônes (v1.1). */

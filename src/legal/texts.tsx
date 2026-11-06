@@ -53,7 +53,9 @@ export function TermsText() {
       <h3>5. Disponibilité et mises à jour</h3>
       <p>
         Après activation, l’Application fonctionne sans connexion. Une connexion est nécessaire pour
-        l’activation et, périodiquement, pour vérifier la validité du code. L’éditeur peut publier des
+        l’activation et, périodiquement, pour vérifier la validité du code. Les rappels quotidiens sont un service
+        facultatif ; leur bonne réception dépend du téléphone, de ses réglages (économie d’énergie, mode
+        Concentration, autorisations) et des services de notification d’Apple ou de Google. L’éditeur peut publier des
         mises à jour correctives ou fonctionnelles ; elles sont proposées à l’utilisateur à l’ouverture de
         l’Application.
       </p>
@@ -132,21 +134,38 @@ export function PrivacyText() {
         la licence.
       </p>
 
-      <h3>4. Achat</h3>
+      <h3>4. Rappels quotidiens (facultatifs)</h3>
+      <p>
+        Si tu actives le rappel quotidien, le serveur enregistre uniquement : l’adresse technique de notification
+        fournie par ton navigateur (et ses clés de chiffrement), l’heure du rappel, ton fuseau horaire, ainsi que
+        ton code de licence et l’identifiant d’appareil aléatoire, pour réserver ce service aux licences valides.
+      </p>
+      <p>
+        Chaque jour, le serveur envoie un simple signal <strong>sans aucune donnée</strong>. C’est ton téléphone qui
+        rédige le message à partir de ses données locales. Le signal transite, chiffré, par le service de
+        notification de ton téléphone (Apple ou Google). Par défaut, le message reste général ; l’option « Messages
+        détaillés », que tu peux activer, affiche des noms et montants sur l’écran verrouillé.
+      </p>
+      <p>
+        Ces données sont supprimées dès que tu désactives les rappels, lorsque l’adresse expire ou lorsque la licence
+        est supprimée. Tu peux désactiver les rappels à tout moment dans Réglages › Rappel quotidien.
+      </p>
+
+      <h3>5. Achat</h3>
       <p>
         Le paiement est traité par Chariow et les opérateurs de paiement, selon leurs propres politiques.
         L’éditeur reçoit les informations de commande que Chariow met à disposition des vendeurs, et ne
         les utilise que pour le suivi des ventes et le support.
       </p>
 
-      <h3>5. Hébergement de l’Application</h3>
+      <h3>6. Hébergement de l’Application</h3>
       <p>
         L’Application est servie par GitHub Pages (GitHub, Inc.). Comme tout hébergeur web, GitHub peut
         enregistrer des journaux techniques (adresse IP, type de navigateur) lors du téléchargement de
         l’Application. Bankiétché n’utilise ni cookie publicitaire ni outil de mesure d’audience.
       </p>
 
-      <h3>6. Tes droits</h3>
+      <h3>7. Tes droits</h3>
       <p>
         Conformément au Livre V du Code du numérique (loi n° 2017-20 du 20 avril 2018, modifiée par la
         loi n° 2020-35 du 6 janvier 2021), tu disposes d’un droit d’accès, de rectification,
@@ -156,14 +175,14 @@ export function PrivacyText() {
         Protection des Données à caractère Personnel (APDP).
       </p>
 
-      <h3>7. Sécurité</h3>
+      <h3>8. Sécurité</h3>
       <p>
         Les échanges avec le serveur de licences sont chiffrés (HTTPS). Le serveur n’expose aucune liste de
         codes ou d’appareils. Protège l’accès à ton téléphone : toute personne qui y accède peut ouvrir
         l’Application. Le mode discret permet de masquer les montants à l’écran.
       </p>
 
-      <h3>8. Évolution de cette politique</h3>
+      <h3>9. Évolution de cette politique</h3>
       <p>Toute modification importante sera signalée dans l’Application.</p>
     </article>
   );

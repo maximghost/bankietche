@@ -17,6 +17,7 @@ export interface UI {
   setTab(t: Tab): void;
   open(s: SheetState): void;
   openSettings(): void;
+  openNotifications(): void;
   /** Période affichée (partagée entre Accueil, Opérations et Stats). */
   period: Period;
   isCurrent: boolean;

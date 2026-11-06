@@ -1,0 +1,6 @@
+# Configuration minimale pour le déploiement des fonctions Edge.
+project_id = "bankietche"
+
+[functions.send-daily-push]
+# Appelée par pg_cron, protégée par l'en-tête x-cron-secret (pas de jeton utilisateur).
+verify_jwt = false

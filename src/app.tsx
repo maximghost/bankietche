@@ -8,6 +8,7 @@ import type { Theme } from './domain/types';
 import { LEGAL_VERSION } from './legal/identity';
 import { useUpdateAvailable } from './pwa';
 import { getLicence, recheckIfDue, type LicenceState } from './services/licence';
+import { resyncPush } from './services/push';
 import { StoreProvider, useStore } from './state/store';
 import { CategorySheet, GoalSheet, TontineSheet } from './ui/forms/EntityForms';
 import { TransactionSheet } from './ui/forms/TransactionForm';
@@ -15,7 +16,7 @@ import { ActivationScreen } from './ui/screens/Activation';
 import { HistoryScreen } from './ui/screens/History';
 import { HomeScreen } from './ui/screens/Home';
 import { SavingsScreen } from './ui/screens/Savings';
-import { SettingsPage } from './ui/screens/Settings';
+import { NotificationsPage, SettingsPage } from './ui/screens/Settings';
 import { StatsScreen } from './ui/screens/Stats';
 import { Onboarding, TermsGate } from './ui/screens/Welcome';
 import { UICtx, type SheetState, type Tab, type UI } from './ui/ui-context';
@@ -82,10 +83,14 @@ function Shell({ licence }: { licence: LicenceState }) {
   const [tab, setTabState] = useState<Tab>('home');
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [todayISO, setToday] = useState(today());
   const [anchor, setAnchor] = useState(todayISO);
   const [updateReady, applyUpdate] = useUpdateAvailable();
   const cfg = settings.period;
+
+  // Rappels : on revérifie l'abonnement une fois par ouverture de l'appli.
+  useEffect(() => { void resyncPush(settings.notifications.enabled, settings.notifications.hour); }, []);
 
   // Passage à minuit / retour au premier plan : on rafraîchit la date du jour.
   useEffect(() => {
@@ -115,6 +120,7 @@ function Shell({ licence }: { licence: LicenceState }) {
       setTab: (t: Tab) => { setTabState(t); window.scrollTo(0, 0); },
       open: setSheet,
       openSettings: () => setSettingsOpen(true),
+      openNotifications: () => setNotifOpen(true),
       period,
       isCurrent,
       canNext,
@@ -167,6 +173,7 @@ function Shell({ licence }: { licence: LicenceState }) {
       </nav>
 
       {settingsOpen && <SettingsPage licence={licence} onClose={() => setSettingsOpen(false)} />}
+      {notifOpen && <NotificationsPage onClose={() => setNotifOpen(false)} onInstall={() => setNotifOpen(false)} />}
       {sheet?.kind === 'tx' && <TransactionSheet initial={sheet.draft} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'goal' && <GoalSheet goal={sheet.goal} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'tontine' && <TontineSheet tontine={sheet.tontine} onClose={() => setSheet(null)} />}

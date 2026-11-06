@@ -67,6 +67,15 @@ export interface Goal {
 
 export type Theme = 'system' | 'light' | 'dark';
 
+/** Rappel quotidien (notification). */
+export interface NotificationSettings {
+  enabled: boolean;
+  /** Heure locale du rappel (0 à 23). */
+  hour: number;
+  /** Afficher noms et montants dans la notification (écran verrouillé). Désactivé par défaut. */
+  detailed: boolean;
+}
+
 /** Réglages de l'utilisateur (stockés localement). */
 export interface Settings {
   /** Prénom ou pseudo, pour personnaliser les messages. */
@@ -77,6 +86,7 @@ export interface Settings {
   discreet: boolean;
   /** Assistant de premier lancement terminé. */
   onboarded: boolean;
+  notifications: NotificationSettings;
   /** Version des CGU acceptées et date d'acceptation. */
   termsVersion?: string;
   termsAcceptedAt?: string;

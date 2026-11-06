@@ -162,6 +162,11 @@ export function normalizeSettings(raw: Partial<Settings> | undefined): Settings 
     theme: raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'system' ? raw.theme : d.theme,
     discreet: raw.discreet === true,
     onboarded: raw.onboarded === true,
+    notifications: {
+      enabled: raw.notifications?.enabled === true,
+      hour: Number.isInteger(raw.notifications?.hour) && raw.notifications!.hour >= 0 && raw.notifications!.hour <= 23 ? raw.notifications!.hour : d.notifications.hour,
+      detailed: raw.notifications?.detailed === true,
+    },
     termsVersion: typeof raw.termsVersion === 'string' ? raw.termsVersion : undefined,
     termsAcceptedAt: typeof raw.termsAcceptedAt === 'string' ? raw.termsAcceptedAt : undefined,
   };
