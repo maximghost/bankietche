@@ -9,6 +9,7 @@
 - Les **données restent sur le téléphone** (IndexedDB). La sauvegarde et la restauration se font par fichier.
 - Elle est **légère** : environ 55 Ko compressés à télécharger.
 - Elle est **personnalisée** : prénom ou pseudo, et une période de gestion au choix (journalière, hebdomadaire, mensuelle, annuelle ou libre).
+- Elle produit un **relevé PDF** aux couleurs de la marque (indicateurs, budgets, objectifs, tontines, opérations), généré sur le téléphone.
 - Elle envoie un **rappel quotidien** (notification, même écran verrouillé), rédigé par le téléphone : le serveur ne reçoit aucune donnée financière.
 - Elle est **accessible** : contrastes AA, navigation au clavier, lecteur d'écran, thème sombre. Audit axe-core WCAG 2 A/AA sans violation.
 
@@ -35,6 +36,7 @@
 | Dossier | Rôle |
 |---|---|
 | `src/domain/` | Logique métier pure et testée : périodes, budget, messages personnalisés, tontines, objectifs |
+| `src/export/` | Relevé PDF (jsPDF, chargé à la demande) |
 | `src/sw.ts` | Service worker : cache hors connexion et rédaction des notifications |
 | `supabase/functions/send-daily-push/` | Fonction d'envoi des rappels (Deno), appelée chaque heure |
 | `src/legal/` | CGU, politique de confidentialité, mentions légales et identité de l'éditeur |
@@ -187,7 +189,7 @@ Pour simuler un téléphone : ouvre Chrome, puis F12 → Ctrl+Maj+M (mode appare
 > 3. Pour l'avoir comme une vraie appli : dans Chrome, menu ⋮ → **« Ajouter à l'écran d'accueil »**.
 >
 > 🔔 Active le rappel quotidien (⚙️ Réglages → Rappel quotidien) pour ne jamais rater une cotisation. Sur iPhone, installe d'abord l'appli sur l'écran d'accueil depuis Safari.
-> 💡 Pense à faire une sauvegarde de temps en temps (⚙️ Réglages → Sauvegarde et export) pour ne rien perdre si tu changes de téléphone.
+> 💡 Pense à faire une sauvegarde de temps en temps (⚙️ Réglages → Relevés et sauvegardes) pour ne rien perdre si tu changes de téléphone.
 > Ton code fonctionne sur 2 téléphones maximum.
 
 ---

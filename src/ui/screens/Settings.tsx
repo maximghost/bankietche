@@ -1,11 +1,11 @@
 import {
-  Bell, BellRing, CalendarRange, Download, Eye, FileSpreadsheet, FileText, Info, KeyRound, Landmark, LayoutGrid, MessageCircle,
+  Bell, BellRing, CalendarRange, Download, Eye, FileText, Info, KeyRound, Landmark, LayoutGrid, MessageCircle,
   Palette, Scale, ShieldCheck, Smartphone, Trash2, Upload, UserRound, Wallet, Plus,
 } from 'lucide-preact';
 import { useRef, useState } from 'preact/hooks';
 import { APP_VERSION } from '../../config';
-import { buildBackup, BackupError, parseBackup, shareOrDownload } from '../../data/backup';
-import { buildCsv, csvFileName } from '../../data/csv';
+import { buildBackup, BackupError, parseBackup, shareBackup, shareFile } from '../../data/backup';
+import { recentPeriods } from '../../export/report';
 import { formatShortDate } from '../../domain/dates';
 import { formatInput, parseAmount } from '../../domain/money';
 import { averageDays, convertBudget, periodKindLabel, periodPhrase, type PeriodConfig } from '../../domain/period';
@@ -69,7 +69,7 @@ export function SettingsPage(props: { licence: LicenceState; onClose: () => void
       </ListGroup>
 
       <ListGroup title="Données" footer="Tes données restent uniquement sur ce téléphone.">
-        <ListRow icon={<Download size={18} />} label="Sauvegarde et export" value={lastBackupAt ? `le ${formatShortDate(lastBackupAt.slice(0, 10))}` : 'Jamais'} onClick={() => setSub('backup')} />
+        <ListRow icon={<FileText size={18} />} label="Relevés et sauvegardes" value={lastBackupAt ? `sauvegardé le ${formatShortDate(lastBackupAt.slice(0, 10))}` : 'PDF, sauvegarde'} onClick={() => setSub('backup')} />
         <ListRow icon={<Trash2 size={18} />} label="Effacer toutes les données" danger onClick={() => setSub('wipe')} />
       </ListGroup>
 
@@ -324,27 +324,37 @@ function AppearancePage({ onClose }: { onClose: () => void }) {
 
 function BackupPage({ onClose }: { onClose: () => void }) {
   const { data, settings, lastBackupAt, markBackupDone, restore } = useStore();
+  const ui = useUI();
   const fileRef = useRef<HTMLInputElement>(null);
+  const periods = recentPeriods(settings, ui.today);
+  const [periodIdx, setPeriodIdx] = useState(0);
+  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const doExport = async () => {
-    const r = await shareOrDownload(buildBackup(data, settings));
-    if (r !== 'cancelled') {
-      await markBackupDone();
-      setMsg({ ok: true, text: r === 'shared' ? 'Sauvegarde partagée.' : 'Sauvegarde téléchargée (dossier Téléchargements).' });
+  const doPdf = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      // Chargé à la demande : le moteur PDF n'alourdit pas le démarrage de l'appli.
+      const [{ buildReport, reportFileName }, { renderReportPdf }] = await Promise.all([
+        import('../../export/report'), import('../../export/pdf'),
+      ]);
+      const report = buildReport(data, settings, periods[periodIdx].period, ui.today);
+      const blob = await renderReportPdf(report);
+      const r = await shareFile(blob, reportFileName(report), 'Relevé Bankiétché');
+      if (r !== 'cancelled') setMsg({ ok: true, text: r === 'shared' ? 'Relevé PDF partagé.' : 'Relevé PDF téléchargé.' });
+    } catch {
+      setMsg({ ok: false, text: 'Le relevé n’a pas pu être créé. Réessaie.' });
+    } finally {
+      setBusy(false);
     }
   };
-  const doCsv = () => {
-    const blob = new Blob([buildCsv(data)], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = csvFileName();
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setMsg({ ok: true, text: 'Fichier CSV téléchargé : il s’ouvre avec Excel, Google Sheets ou LibreOffice.' });
+  const doBackup = async () => {
+    const r = await shareBackup(buildBackup(data, settings));
+    if (r !== 'cancelled') {
+      await markBackupDone();
+      setMsg({ ok: true, text: r === 'shared' ? 'Sauvegarde partagée.' : 'Sauvegarde téléchargée.' });
+    }
   };
   const doImport = async (file: File | undefined) => {
     if (!file) return;
@@ -362,17 +372,22 @@ function BackupPage({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Page title="Sauvegarde et export" onClose={onClose}>
-      <p class="muted">
-        Tes données sont stockées sur ce téléphone. Fais une sauvegarde régulièrement et garde-la en lieu sûr
-        (Google Drive, e-mail, WhatsApp à toi-même) pour la retrouver si tu changes de téléphone.
-      </p>
-      <p>Dernière sauvegarde : <b>{lastBackupAt ? formatShortDate(lastBackupAt.slice(0, 10)) : 'jamais'}</b></p>
-      <div class="list-card">
-        <ListRow icon={<Download size={18} />} label="Créer une sauvegarde" onClick={doExport} />
+    <Page title="Relevés et sauvegardes" onClose={onClose}>
+      <ListGroup title="Relevé PDF" footer="Un document clair, à tes couleurs : indicateurs, budgets, objectifs, tontines et détail des opérations. Idéal pour garder une trace ou le montrer.">
+        <label class="list-row">
+          <span class="list-label">Période</span>
+          <select class="inline-select" value={String(periodIdx)} onChange={(e) => setPeriodIdx(Number(e.currentTarget.value))} aria-label="Période du relevé">
+            {periods.map((p, i) => <option value={String(i)}>{p.label}</option>)}
+          </select>
+        </label>
+        <ListRow icon={<FileText size={18} />} label={busy ? 'Création du relevé…' : 'Créer le relevé PDF'} onClick={busy ? undefined : doPdf} />
+      </ListGroup>
+
+      <ListGroup title="Sauvegarde de restauration" footer="Fichier technique qui sert uniquement à retrouver tes données dans Bankiétché (nouveau téléphone, réinstallation). Garde-le en lieu sûr : Google Drive, e-mail ou WhatsApp à toi-même.">
+        <div class="list-row"><span class="list-label">Dernière sauvegarde</span><span class="list-value">{lastBackupAt ? formatShortDate(lastBackupAt.slice(0, 10)) : 'jamais'}</span></div>
+        <ListRow icon={<Download size={18} />} label="Créer une sauvegarde" onClick={doBackup} />
         <ListRow icon={<Upload size={18} />} label="Restaurer une sauvegarde" onClick={() => fileRef.current?.click()} />
-        <ListRow icon={<FileSpreadsheet size={18} />} label="Exporter mes opérations (CSV)" onClick={doCsv} />
-      </div>
+      </ListGroup>
       <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => doImport(e.currentTarget.files?.[0])} />
       {msg && <p class={msg.ok ? 'info-box' : 'form-error'} role="status">{msg.text}</p>}
     </Page>

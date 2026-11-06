@@ -18,6 +18,8 @@ export default defineConfig({
       filename: 'sw.ts',
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Modules optionnels de jsPDF jamais utilisés par l'appli : inutile de les télécharger à l'installation.
+        globIgnores: ['**/html2canvas-*.js', '**/purify.es-*.js', '**/index.es-*.js'],
       },
       includeAssets: ['icons/favicon.svg', 'icons/apple-touch-icon.png', 'icons/badge-96.png'],
       manifest: {

@@ -24,8 +24,8 @@ export function buildBackup(data: AppData, settings: Settings, now: Date = new D
 }
 
 export function backupFileName(now: Date = new Date()): string {
-  const d = now.toISOString().slice(0, 10);
-  return `bankietche-sauvegarde-${d}.json`;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `Bankietche-sauvegarde-${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}h${p(now.getMinutes())}.json`;
 }
 
 export class BackupError extends Error {}
@@ -106,17 +106,16 @@ export function parseBackup(text: string): BackupFile {
   };
 }
 
-/** Déclenche le téléchargement (ou le partage sur mobile si disponible). */
-export async function shareOrDownload(backup: BackupFile, now: Date = new Date()) {
-  const name = backupFileName(now);
-  const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
-  const file = new File([blob], name, { type: 'application/json' });
-
-  // Sur Android, le partage permet d'envoyer directement sur WhatsApp, Drive, e-mail…
+/**
+ * Partage un fichier (feuille de partage du téléphone : WhatsApp, Drive, Fichiers…)
+ * ou, à défaut, le télécharge.
+ */
+export async function shareFile(blob: Blob, name: string, title: string) {
+  const file = new File([blob], name, { type: blob.type });
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (nav.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: 'Sauvegarde Bankiétché' });
+      await navigator.share({ files: [file], title });
       return 'shared' as const;
     } catch (e) {
       if ((e as DOMException).name === 'AbortError') return 'cancelled' as const;
@@ -132,4 +131,10 @@ export async function shareOrDownload(backup: BackupFile, now: Date = new Date()
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return 'downloaded' as const;
+}
+
+/** Sauvegarde de restauration (fichier technique .json). */
+export function shareBackup(backup: BackupFile, now: Date = new Date()) {
+  const blob = new Blob([JSON.stringify(backup, null, 1)], { type: 'application/json' });
+  return shareFile(blob, backupFileName(now), 'Sauvegarde Bankiétché');
 }

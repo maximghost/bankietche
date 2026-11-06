@@ -1,6 +1,6 @@
 /** Configuration lue au moment du build (fichier .env.local ou secrets GitHub). */
 
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '1.3.0';
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '');
 /** Clé publique Supabase : publishable (sb_publishable_…) ou ancienne clé anon (eyJ…). */

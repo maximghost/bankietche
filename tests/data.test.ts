@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { buildBackup, parseBackup, BackupError } from '../src/data/backup';
 import { openDB } from 'idb';
 import { deleteWithLinkedTransactions, getDB, loadAll, putRecord, replaceAll, resetDBConnection } from '../src/data/db';
-import { buildCsv } from '../src/data/csv';
 import { defaultSettings } from '../src/domain/defaults';
 import { codeBody, formatCodeBody, normalizeCode, isWellFormed } from '../src/services/licence';
 
@@ -72,12 +71,6 @@ describe('IndexedDB', () => {
     expect(d.transactions).toHaveLength(1);
   });
 
-  it('exporte un CSV compatible Excel', async () => {
-    await putRecord('transactions', { id: 'a', type: 'depense', amount: 1500, categoryId: 'dep-transport', method: 'especes', date: '2026-11-02', note: 'zém; campus', createdAt: 1 });
-    const csv = buildCsv(await loadAll());
-    expect(csv.startsWith('\uFEFFDate;Type;')).toBe(true);
-    expect(csv).toContain('2026-11-02;Dépense;Transport;-1500;Espèces;;;"zém; campus"');
-  });
 });
 
 describe('validation des sauvegardes', () => {

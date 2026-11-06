@@ -11,8 +11,56 @@
     <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Bankiétché — Mon banquier</title>
+    <!-- Écran de lancement : en ligne pour s'afficher avant le chargement de l'appli. -->
+    <style>
+      #splash {
+        position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+        background: radial-gradient(120% 80% at 50% 35%, #7C3AED 0%, #5B21B6 55%, #3B0F86 100%);
+        color: #fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        transition: opacity .4s ease, transform .4s ease;
+      }
+      #splash.out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+      .sp-stage { position: relative; width: 120px; height: 120px; }
+      .sp-ring { position: absolute; inset: 0; border-radius: 34px; border: 3px solid rgba(255,255,255,.55); opacity: 0; animation: sp-ring 1.1s .55s ease-out both; }
+      .sp-tile { position: absolute; inset: 0; border-radius: 30px; background: #fff; display: grid; place-items: center;
+        box-shadow: 0 18px 40px rgba(20, 5, 60, .45); animation: sp-pop .7s cubic-bezier(.2, 1.4, .4, 1) both; }
+      .sp-tile svg { width: 74px; height: 74px; }
+      .sp-b { animation: sp-b .5s .25s ease-out both; transform-origin: 50% 50%; }
+      .sp-coin { position: absolute; right: -10px; bottom: -10px; width: 40px; height: 40px; border-radius: 50%; background: #FBBF24;
+        color: #4C1D95; font-weight: 800; font-size: 21px; display: grid; place-items: center; box-shadow: 0 6px 14px rgba(0,0,0,.25);
+        animation: sp-coin .75s .45s cubic-bezier(.3, 1.5, .5, 1) both; }
+      .sp-name { font-size: 30px; font-weight: 800; letter-spacing: -.02em; animation: sp-up .55s .7s ease-out both; }
+      .sp-tag { font-size: 15px; color: rgba(255,255,255,.85); margin-top: -10px; animation: sp-up .55s .85s ease-out both; }
+      .sp-bar { width: 120px; height: 4px; border-radius: 99px; background: rgba(255,255,255,.2); overflow: hidden; margin-top: 8px; animation: sp-up .4s .9s both; }
+      .sp-bar span { display: block; height: 100%; width: 100%; background: #FBBF24; border-radius: 99px; transform-origin: left; animation: sp-fill 1.1s .9s ease-in-out both; }
+      .sp-brand { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); font-size: 13px; color: rgba(255,255,255,.7); animation: sp-up .5s 1s both; }
+      @keyframes sp-pop { 0% { transform: scale(.3) rotate(-12deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+      @keyframes sp-b { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+      @keyframes sp-coin { 0% { transform: translateY(-90px) rotate(-200deg) scale(.6); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+      @keyframes sp-ring { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.7); opacity: 0; } }
+      @keyframes sp-up { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+      @keyframes sp-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+      @media (prefers-reduced-motion: reduce) {
+        #splash *, #splash { animation: none !important; transition: none !important; }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" role="status" aria-label="Chargement de Bankiétché">
+      <div class="sp-stage" aria-hidden="true">
+        <div class="sp-ring"></div>
+        <div class="sp-tile">
+          <svg viewBox="150 130 240 270">
+            <path class="sp-b" d="M196 150h86c46 0 76 24 76 62 0 25-13 43-35 52 30 8 47 30 47 60 0 44-34 72-88 72h-86z M246 192v56h30c20 0 32-10 32-28s-12-28-32-28z M246 286v62h38c22 0 35-11 35-31s-13-31-35-31z" fill="#6D28D9" fill-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="sp-coin">F</div>
+      </div>
+      <div class="sp-name" aria-hidden="true">Bankiétché</div>
+      <div class="sp-tag" aria-hidden="true">Ton banquier, dans ta poche</div>
+      <div class="sp-bar" aria-hidden="true"><span></span></div>
+      <div class="sp-brand" aria-hidden="true">une appli Ghost.Technologies</div>
+    </div>
     <div id="app"></div>
     <noscript>Bankiétché a besoin de JavaScript pour fonctionner.</noscript>
     <script type="module" src="/src/main.tsx"></script>
