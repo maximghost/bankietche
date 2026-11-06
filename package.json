@@ -1,0 +1,30 @@
+{
+  "name": "bankietche",
+  "version": "1.1.0",
+  "description": "Bankiétché — Mon banquier. Gestion de budget pour les jeunes (PWA hors ligne).",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "check:legal": "node scripts/check-legal.mjs"
+  },
+  "dependencies": {
+    "idb": "^8.0.4",
+    "lucide-preact": "^1.70.0",
+    "preact": "^11.2.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "fake-indexeddb": "^6.2.7",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.0",
+    "workbox-build": "^7.4.1",
+    "workbox-window": "^7.4.1"
+  },
+  "private": true,
+  "type": "module"
+}
